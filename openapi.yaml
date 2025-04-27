@@ -1,6 +1,6 @@
-openapi: "3.0.0"
+openapi: 3.0.0
 info:
-  version: 1.0.1
+  version: 0.19.3
   title: Autobahn App API
   contact:
     url: https://www.autobahn.de/datenschutz/
@@ -10,747 +10,1028 @@ info:
   description: |
     Was passiert auf Deutschlands Bundesstraßen? API für aktuelle Verwaltungsdaten zu Baustellen, Staus und Ladestationen. Außerdem Zugang zu Verkehrsüberwachungskameras und vielen weiteren Datensätzen.
 servers:
-  - url: https://verkehr.autobahn.de/o/autobahn
+  - url: https://verkehr.autobahn.de/api
+  - url: https://verkehr.autobahn.de/o
+externalDocs:
+  description: "Weiterführende Dokumentation"
+  url: "https://github.com/bundesAPI/autobahn-api/blob/main/README.md"
+
+tags:
+  - name: Überblick
+    description: Auskunft über alle Autobahnen
+  - name: Autobahn
+    description: Auskunft über eine Autobahn
+  - name: Details
+    description: Auskunft über einen Eintrag
+  - name: Routencheck
+  - name: Allgemein
+    description: Allgemeine Informationen
+  - name: Sonstiges
 
 paths:
-
   /:
     get:
-      operationId: list-autobahnen
-      summary: Liste verfügbarer Autobahnen
-      description: Gibt eine Liste der verfügbaren Autobahnen zurück.
+      summary: API Version
+      tags: [Allgemein]
       responses:
-        "200":
-          description: Success
+        200:
+          description: OK
+          content:
+            text/html:
+              schema:
+                type: string
+                example: "Version der api: 0.19.3"
+  /datenschutz:
+    get:
+      tags: [Allgemein]
+      responses:
+        200:
+          description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Roads"
-
-  /{roadId}/services/roadworks:
+                type: object
+                properties:
+                  TITLE:
+                    type: string
+                    example: Datenschutz
+                  CONTENT:
+                    type: string
+                    example: "<section> <h2>Informationen zur Datenverarbeitung durch die Autobahn GmbH des Bundes bei der Nutzung der Autobahn Service App</h2>..."
+  /impressum:
     get:
-      operationId: list-roadworks
-      summary: Liste aktueller Baustellen
-      description: Gibt eine Liste der aktuellen Baustellen zu einer Autobahn zurück.
-      parameters:
-        - name: roadId
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/RoadId"
+      tags: [Allgemein]
       responses:
-        "200":
-          description: Success
+        200:
+          description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Roadworks"
-        "204":
-          description: Not found.
-        "400":
-          description: Internal server error.
-        "404":
-          description: Not found.
-
-  /details/roadworks/{roadworkId}:
+                type: object
+                properties:
+                  TITLE:
+                    type: string
+                    example: Impressum
+                  CONTENT:
+                    type: string
+                    example: '<div class="content-block"><h3>Herausgeber</h3><p>Die Autobahn GmbH des Bundes<br>...'
+  /categories:
     get:
-      operationId: get-roadwork
-      summary: Details einer Baustelle
-      description: Gibt Details zu einer konkreten Baustelle zurück.
-      parameters:
-        - name: roadworkId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: byte
-            example: "Uk9BRFdPUktTX19tZG0ubndfXzAyLTgwMDAwIEQgNzEgMTkgMDkvS0xCV1JO"
+      tags: [Allgemein]
       responses:
-        "200":
-          description: Success
+        200:
+          description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Roadwork"
-        "204":
-          description: Not found.
-        "400":
-          description: Internal server error.
-        "404":
-          description: Not found.
-
-  /{roadId}/services/webcam:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Category"
+  /autobahn:
     get:
-      operationId: list-webcams
-      summary: Liste verfügbarer Webcams
-      description: Gibt eine Liste der Webcams zu einer Autobahn zurück.
+      summary: Liste der Autobahnen
+      tags: [Überblick]
       parameters:
-        - name: roadId
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/RoadId"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
       responses:
-        "200":
-          description: Success
+        200:
+          description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Webcams"
-        "204":
-          description: Not found.
-        "400":
-          description: Internal server error.
-        "404":
-          description: Not found.
-
-  # https://verkehr.autobahn.de/o/autobahn/details/webcam/%5BID%5D
-  /details/webcam/{webcamId}:
+                type: object
+                properties:
+                  roads:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RoadID"
+  /parking:
     get:
-      operationId: get-webcam
-      summary: Details einer Webcam
-      description: Gibt Details einer konkreten Webcam zurück.
-      parameters:
-        - name: webcamId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: byte
-            example: "V0VCQ0FNX19OUldfU2lsYS1TaWduYWxiYXVfMTAxMDgxNDE3MjM4ODYzOTk5MTU="
+      summary: Anzahl der freien und gesamten Parkplätze pro Stellplatz
+      tags: [Überblick]
       responses:
-        "200":
-          description: Success
+        200:
+          description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Webcam"
-        "204":
-          description: Not found.
-        "400":
-          description: Internal server error.
-        "404":
-          description: Not found.
-
-  /{roadId}/services/parking_lorry:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ParkingLot"
+  /services/{service}:
     get:
-      operationId: list-parking-lorries
-      summary: Liste verfügbarer Rastplätze
-      description: Gibt eine Liste der Rastplätze zu einer Autobahn zurück.
+      summary: Anzahl der Einträge pro Autobahn
+      tags: [Überblick]
       parameters:
-        - name: roadId
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/RoadId"
+        - $ref: "#/components/parameters/Service"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
       responses:
-        "200":
-          description: Success
+        200:
+          description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ParkingLorries"
-        "204":
-          description: Not found.
-        "400":
-          description: Internal server error.
-        "404":
-          description: Not found.
-
-  /details/parking_lorry/{lorryId}:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RoadCounter"
+  /autobahn/{roadID}/services/warning:
     get:
-      operationId: get-parking-lorry
-      summary: Details eines Rastplatzes
-      description: Gibt Details eines konkreten Rastplatzes zurück.
+      summary: Verkehrsmeldungen
+      tags: [Autobahn]
       parameters:
-        - name: lorryId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: byte
-            example: "UEFSS0lOR19fbWRtLmxvcnJ5LnBhcmtpbmdfX0RFLVNILTAwMTEwOA=="
+        - $ref: "#/components/parameters/RoadID"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
       responses:
-        "200":
-          description: Success
+        200:
+          description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ParkingLorry"
-        "204":
-          description: Not found.
-        "400":
-          description: Internal server error.
-        "404":
-          description: Not found.
-
-  /{roadId}/services/warning:
+                type: object
+                properties:
+                  warning:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Warning"
+  /autobahn/{roadID}/services/closure:
     get:
-      operationId: list-warnings
-      summary: Liste aktueller Verkehrsmeldungen
-      description: Gibt eine Liste der Verkehrsmeldungen zu einer Autobahn zurück.
+      summary: Sperrungen
+      tags: [Autobahn]
       parameters:
-        - name: roadId
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/RoadId"
+        - $ref: "#/components/parameters/RoadID"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
       responses:
-        "200":
-          description: Success
+        200:
+          description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Warnings"
-        "204":
-          description: Not found.
-        "400":
-          description: Internal server error.
-        "404":
-          description: Not found.
-
-  /details/warning/{warningId}:
+                type: object
+                properties:
+                  closure:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Closure"
+  /autobahn/{roadID}/services/roadworks:
     get:
-      operationId: get-warning
-      summary: Details zu einer Verkehrsmeldung
-      description: Gibt Details zu einer konkreten Verkehrsmeldung zurück.
+      summary: Baustellen
+      tags: [Autobahn]
       parameters:
-        - name: warningId
+        - $ref: "#/components/parameters/RoadID"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  roadwork:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Roadwork"
+  /autobahn/{roadID}/services/webcam:
+    get:
+      summary: Webcams
+      deprecated: true
+      description: Deaktiviert aufgrund der aktuellen Entwicklungen in Europa.
+      tags: [Autobahn]
+      parameters:
+        - $ref: "#/components/parameters/RoadID"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webcam:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Webcam"
+  /autobahn/{roadID}/services/parking_lorry:
+    get:
+      summary: Rastanlagen
+      tags: [Autobahn]
+      parameters:
+        - $ref: "#/components/parameters/RoadID"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  parking_lorry:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ParkingLorry"
+  /autobahn/{roadID}/services/electric_charging_station:
+    get:
+      summary: E-Ladestationen
+      tags: [Autobahn]
+      parameters:
+        - $ref: "#/components/parameters/RoadID"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  parking_lorry:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ElectricChargingStation"
+  /autobahn/details/warning/{warningID}:
+    get:
+      summary: Details einer Verkehrswarnung
+      tags: [Details]
+      parameters:
+        - name: warningID
           in: path
           required: true
           schema:
-            type: string
-            format: byte
-            example: "V0FSTklOR19fbWRtLnZpel9fTE1TLU5XL3JfTE1TLU5XLzMyNDE3OV9EICBOVyBMTVMtTlcuMA=="
+            $ref: "#/components/schemas/WarningID"
       responses:
-        "200":
-          description: Success
+        200:
+          description: OK
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Warning"
-        "204":
-          description: Not found.
-        "400":
-          description: Internal server error.
-        "404":
-          description: Not found.
-
-  /{roadId}/services/closure:
+  /autobahn/details/closure/{closureID}:
     get:
-      operationId: list-closures
-      summary: Liste aktueller Sperrungen
-      description: Gibt eine Liste der Sperrungen zu einer Autobahn zurück.
+      summary: Details einer Sperrung
+      tags: [Details]
       parameters:
-        - name: roadId
+        - name: closureID
           in: path
           required: true
           schema:
-            $ref: "#/components/schemas/RoadId"
+            $ref: "#/components/schemas/ClosureID"
       responses:
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Closures"
-        "204":
-          description: Not found.
-        "400":
-          description: Internal server error.
-        "404":
-          description: Not found.
-
-  /details/closure/{closureId}:
-    get:
-      operationId: get-closure
-      summary: Details zu einer Sperrung
-      description: Gibt Details zu einer konkreten Sperrung zurück.
-      parameters:
-        - name: closureId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: byte
-            example: "Q0xPU1VSRV9fbWRtLnZpel9fTE1TLU5XL3JfVElDLU5SV0JMSy8zOS9OUldCTEsvMTAgMzUgMjEgRCAwOTI0Mi0wMV9EICBOVyBMTVMtTlcuMA=="
-      responses:
-        "200":
-          description: Success
+        200:
+          description: OK
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Closure"
-        "204":
-          description: Not found.
-        "400":
-          description: Internal server error.
-        "404":
-          description: Not found.
-
-  /{roadId}/services/electric_charging_station:
+  /autobahn/details/roadworks/{roadworkID}:
     get:
-      operationId: list-charging-stations
-      summary: Liste aktueller Ladestationen
-      description: Gibt eine Liste der Ladestationen zu einer Autobahn zurück.
+      summary: Details einer Baustelle
+      tags: [Details]
       parameters:
-        - name: roadId
+        - name: roadworkID
           in: path
           required: true
           schema:
-            $ref: "#/components/schemas/RoadId"
+            $ref: "#/components/schemas/RoadworkID"
       responses:
-        "200":
-          description: Success
+        200:
+          description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ElectricChargingStations"
-        "204":
-          description: Not found.
-        "400":
-          description: Internal server error.
-        "404":
-          description: Not found.
-
-  /details/electric_charging_station/{stationId}:
+                $ref: "#/components/schemas/Roadwork"
+  /autobahn/details/webcam/{webcamID}:
     get:
-      operationId: get-charging-station
-      summary: Details zu einer Ladestation
-      description: Gibt Details zu einer konkreten Ladestation zurück.
+      summary: Details einer Webcam
+      deprecated: true
+      description: Deaktiviert aufgrund der aktuellen Entwicklungen in Europa.
+      tags: [Details]
       parameters:
-        - name: stationId
+        - name: webcamID
           in: path
           required: true
           schema:
-            type: string
-            format: byte
-            example: "RUxFQ1RSSUNfQ0hBUkdJTkdfU1RBVElPTl9fMTczMzM="
+            $ref: "#/components/schemas/WebcamID"
       responses:
-        "200":
-          description: Success
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webcam"
+  /autobahn/details/parking_lorry/{parkingLorryID}:
+    get:
+      summary: Details einer Rastanlage
+      tags: [Details]
+      parameters:
+        - name: parkingLorryID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParkingLorryID"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParkingLorry"
+  /autobahn/details/electric_charging_station/{electricChargingStationID}:
+    get:
+      summary: Details einer E-Ladestation
+      tags: [Details]
+      parameters:
+        - name: electricChargingStationID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ElectricChargingStationID"
+      responses:
+        200:
+          description: OK
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ElectricChargingStation"
-        "204":
-          description: Not found.
-        "400":
-          description: Internal server error.
-        "404":
-          description: Not found.
+  /photon/api:
+    get:
+      summary: Suche nach einem Ort
+      tags: [Routencheck]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          example: Berlin
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoJSONFeatureCollection"
+  /route/car:
+    get:
+      summary: Suche nach einer Route
+      tags: [Routencheck]
+      parameters:
+        - name: start
+          in: query
+          required: true
+          example: 13.40419,52.50289
+          schema:
+            type: string
+        - name: target
+          in: query
+          required: true
+          example: 10.02766,53.56734
+          schema:
+            type: string
+        - name: detailed
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: OK
+  /autobahnOsInformationen:
+    get:
+      summary: Alle Einträge
+      description: Deprecated auf Grund von Performance
+      deprecated: true
+      tags: [Sonstiges]
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RoadItem"
+  /autobahnOsInformationen/tile/{longitude}/{latitude}/{zoom}.mvt:
+    get:
+      summary: Karten-Kachel
+      tags: [Sonstiges]
+      parameters:
+        - $ref: "#/components/parameters/Longitude"
+        - $ref: "#/components/parameters/Latitude"
+        - $ref: "#/components/parameters/Zoom"
+      responses:
+        200:
+          description: OK
+          content:
+            application/vnd.mapbox-vector-tile:
+              schema:
+                type: string
+                format: binary
+  /../tiles/styles/verkehr/{filename}:
+    get:
+      tags: [Sonstiges]
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - style.json
+              - sprite@2x.json
+              - sprite@2x.png
+      responses:
+        200:
+          description: OK
+  /../tiles/data/{filename}.json:
+    get:
+      tags: [Sonstiges]
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - v3
+              - europe
+              - lcl_junction
+      responses:
+        200:
+          description: OK
+  /../tiles/data/{filename}/{zoom}/{longitude}/{latitude}.pbf:
+    get:
+      tags: [Sonstiges]
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - v3
+              - europe
+              - lcl_junction
+        - $ref: "#/components/parameters/Longitude"
+        - $ref: "#/components/parameters/Latitude"
+        - $ref: "#/components/parameters/Zoom"
+      responses:
+        200:
+          description: OK
+  /../web/main/karte/:
+    get:
+      tags: [Sonstiges]
+      summary: Funktioniert via Swagger UI nicht.
+      responses:
+        200:
+          description: OK
+          content:
+            text/html:
+              schema:
+                type: string
+  /../web/main/karte/img:
+    get:
+      tags: [Sonstiges]
+      summary: Funktioniert via Swagger UI nicht.
+      responses:
+        200:
+          description: OK
+          content:
+            text/html:
+              schema:
+                type: string
+  /../web/main/karte/img/{filename}:
+    get:
+      tags: [Sonstiges]
+      summary: Funktioniert via Swagger UI nicht.
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ImageFilename"
+      responses:
+        200:
+          description: OK
+          content:
+            text/html:
+              schema:
+                type: string
 
 components:
+  parameters:
+    Offset:
+      name: offset
+      in: query
+      schema:
+        type: number
+        example: 0
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: number
+        example: 50
+    Order:
+      name: order
+      in: query
+      schema:
+        type: number
+    Service:
+      in: path
+      name: service
+      required: true
+      schema:
+        $ref: "#/components/schemas/Service"
+    RoadID:
+      in: path
+      name: roadID
+      required: true
+      schema:
+        $ref: "#/components/schemas/RoadID"
+    Longitude:
+      name: longitude
+      in: path
+      required: true
+      example: 16
+      schema:
+        type: integer
+    Latitude:
+      name: latitude
+      in: path
+      required: true
+      example: 11
+      schema:
+        type: integer
+    Zoom:
+      name: zoom
+      in: path
+      required: true
+      example: 5
+      schema:
+        type: integer
   schemas:
-
-    Roads:
+    RoadCounter:
       type: object
       properties:
-        roads:
-          type: array
-          items:
-            $ref: '#/components/schemas/RoadId'
-
-    RoadId:
+        road:
+          $ref: "#/components/schemas/RoadID"
+        counter:
+          $ref: "#/components/schemas/IntegerString"
+    RoadID:
       type: string
-      pattern: '[A-Z][A-Za-z]*[1-9]([0-9]{1,3})?(\/[A-Z][A-Za-z]*[1-9]([0-9]{1,3})?)?'
-      description: |
-        Kann jede gültige Straßenbezeichnung sein (nicht auf Autobahnen beschränkt). Die Gültigkeit wird nicht überprüft: Abfragen mit nicht existierenden Straßenbezeichnungen liefern einen leeren Datensatz zurück. Die Schreibweise kann von der sonst üblichen Form abweichen (z.B. S1234 statt St1234 für Staatsstraßen).
-      example: "A1"
-
-    Extent:
+      example: A1
+    ParkingLotID:
       type: string
-      pattern: '-?\d+(?:\.\d+)?,\s*-?\d+(?:\.\d+)?,\s*-?\d+(?:\.\d+)?,\s*-?\d+(?:\.\d+)?'
-      description: Rechteck (in WGS84-Koordinaten), das den betroffenen Streckenabschnitt umschließt.
-      example: "10.728384054665147,54.00605746113356,10.775848767524598,54.09436740278899"
-
-    Point:
-      type: string
-      pattern: '-?\d+(?:\.\d+)?,\s*-?\d+(?:\.\d+)?'
-      description: Beginn des betroffenen Streckenabschnitts (Längengrad und Breitengrad in WGS84). Identisch zu Coordinate, jedoch sind rundungsbedingte Abweichungen möglich.
-      example: "10.729057,54.006057"
-
-    Coordinate:
+      example: DE-NW-000330
+    ParkingLot:
       type: object
-      description: Beginn des betroffenen Streckenabschnitts (Koordinaten in WGS84). Identisch zu Point, jedoch sind rundungsbedingte Abweichungen möglich.
-      example: {
-        "lat": "54.006057",
-        "long": "10.729057"
-      }
       properties:
-        lat:
-          $ref: '#/components/schemas/LatLongValue'
-        long:
-          $ref: '#/components/schemas/LatLongValue'
-
-    LatLongValue:
-      type: string
-      pattern: '-?\d+(?:\.\d+)?'
-
-    Identifier:
-      type: string
-      format: byte
-
-    MultilineText:
-      type: array
-      example: [
-          "Beginn: 29.06.2021 09:00",
-          "Ende: 28.11.2021 17:00",
-          "",
-          "Art der Maßnahme:Asphaltdeckenerneuerung",
-          "Einschränkungen:Es steht nur 1 Fahrstreifen zur Verfügung.\n\nVollsperrung der AS Eutin Ostseite vom 17.07.2021 - 15.09.2021.\n\nVollsperrung der AS Scharbeutz Ostseite vom 16.09.2021 - 17.11.2021.",
-          "Maximale Durchfahrsbreite: 3.25\n"
-      ]
-      items:
-        type: string
-
-    IconRef:
-      type: string
-      description: |
-        Sinnbild, das die Art des Eintrags beschreibt. Größtenteils sind diese dem offiziellen Verkehrszeichenkatalog entnommen, teilweise allerdings mit abweichender Bedeutung und/oder nicht offiziellen Unternummern. Wo kein passendes Verkehrszeichen existiert, werden nicht-numerische Werte verwendet:
-        <ul>
-        <li>101: Gefahr</li>
-        <li>123: Bauarbeiten</li>
-        <li>250: Sperrung</li>
-        <li>262-2: Max. 3,5t</li>
-        <li>314-50: Park-/Rastplatz (Pkw/Lkw)</li>
-        <li>314-50-2: Park-/Rastplatz (nur Pkw)</li>
-        <li>448: Anschlussstelle gesperrt</li>
-        <li>charging_plug_strong: Schnellladestation für E-Fahrzeuge</li>
-        <li>warnkegel: Kurzzeitbaustelle</li>
-        </ul>
-
-    DisplayType:
-      type: string
-      enum:
-        - ROADWORKS
-        - WEBCAM
-        - PARKING
-        - WARNING
-        - WEIGHT_LIMIT_35
-        - CLOSURE
-        - CLOSURE_ENTRY_EXIT
-        - STRONG_ELECTRIC_CHARGING_STATION
-        - SHORT_TERM_ROADWORKS
-        - ELECTRIC_CHARGING_STATION
-
-    LorryParkingFeatureIcon:
-      type: object
-      example: {
-        "icon": "almofont almo-picnic_facility",
-        "description": "Picknickmöglichkeiten",
-        "style": ""
-      }
-      properties:
-        icon:
-          type: string
-        description:
-          type: string
-        style:
-          type: string
-
+        id:
+          $ref: "#/components/schemas/ParkingLotID"
+        street:
+          $ref: "#/components/schemas/RoadID"
+        hasSvg:
+          type: boolean
+        capacity:
+          type: object
+          properties:
+            truck:
+              type: integer
+        free:
+          type: object
+          properties:
+            truck:
+              type: integer
     RoadItem:
       type: object
       properties:
-        extent:
-          $ref: '#/components/schemas/Extent'
         identifier:
-          $ref: '#/components/schemas/Identifier'
-        routeRecommendation:
-          type: array
-          items:
-            # ???
-            type: object
-        coordinate:
-          $ref: '#/components/schemas/Coordinate'
-        footer:
-          $ref: '#/components/schemas/MultilineText'
-        icon:
-          $ref: '#/components/schemas/IconRef'
-        isBlocked:
           type: string
-        description:
-          $ref: '#/components/schemas/MultilineText'
         title:
           type: string
-        point:
-          $ref: '#/components/schemas/Point'
+          example: A1 | Bremen/Brinkum - Stuhr
+        subtitle:
+          type: string
+          example: Arnheim -> Oberhausen
+        description:
+          $ref: "#/components/schemas/MultiLineText"
+        footer:
+          $ref: "#/components/schemas/MultiLineText"
+        routeRecommendation:
+          $ref: "#/components/schemas/MultiLineText"
         display_type:
-          $ref: '#/components/schemas/DisplayType'
+          $ref: "#/components/schemas/DisplayType"
+        icon:
+          $ref: "#/components/schemas/Icon"
         lorryParkingFeatureIcons:
           type: array
           items:
-            $ref: '#/components/schemas/LorryParkingFeatureIcon'
+            $ref: "#/components/schemas/LorryParkingFeatureIcon"
+        isBlocked:
+          $ref: "#/components/schemas/BooleanString"
         future:
           type: boolean
-        subtitle:
-          type: string
-
-
-    RoadEvent:
-      allOf:
-        - $ref: '#/components/schemas/RoadItem'
-        - type: object
-          properties:
-            startTimestamp:
-              type: string
-              format: date-time
-
-    Roadworks:
-      type: object
-      properties:
-        roadworks:
-          type: array
-          items:
-            $ref: '#/components/schemas/Roadwork'
-
-    Roadwork:
-      example: {
-        "extent": "10.728384054665147,54.00605746113356,10.775848767524598,54.09436740278899",
-        "identifier": "Uk9BRFdPUktTX19tZG0uc2hfXzYzMTU=",
-        "routeRecommendation": [],
-        "coordinate": {
-          "lat": "54.006057",
-          "long": "10.729057"
-        },
-        "footer": [],
-        "icon": "123",
-        "isBlocked": "false",
-        "description": [
-            "Beginn: 29.06.2021 09:00",
-            "Ende: 28.11.2021 17:00",
-            "",
-            "Art der Maßnahme:Asphaltdeckenerneuerung",
-            "Einschränkungen:Es steht nur 1 Fahrstreifen zur Verfügung.\n\nVollsperrung der AS Eutin Ostseite vom 17.07.2021 - 15.09.2021.\n\nVollsperrung der AS Scharbeutz Ostseite vom 16.09.2021 - 17.11.2021.",
-            "Maximale Durchfahrsbreite: 3.25\n"
-        ],
-        "title": "A1 | AS Pansdorf (17) - AS Neustadt-Mitte (14)",
-        "point": "10.729057,54.006057",
-        "display_type": "ROADWORKS",
-        "lorryParkingFeatureIcons": [],
-        "future": false,
-        "subtitle": "Lübeck Richtung Fehmarn",
-        "startTimestamp": "2021-06-29T09:00:00.000+0200"
-      }
-      allOf:
-        - $ref: '#/components/schemas/RoadEvent'
-
-    Webcams:
-      type: object
-      properties:
-        webcam:
-          type: array
-          items:
-            $ref: '#/components/schemas/Webcam'
-
-    Webcam:
-      example:     {
-        "extent": "6.861151,50.987423,6.861151,50.987423",
-        "identifier": "V0VCQ0FNX19OUldfU2lsYS1TaWduYWxiYXVfMTAxMDgxMDk4ODE2NDgyOTQ4NTQ=",
-        "routeRecommendation": [],
-        "coordinate": {
-          "lat": "50.987423",
-          "long": "6.861151"
-        },
-        "footer": [
-            "ID: WEBCAM__NRW_Sila-Signalbau_10108109881648294854"
-        ],
-        "icon": "webcam",
-        "isBlocked": "false",
-        "description": [],
-        "title": "A1 | ID005 AK Köln-Nord",
-        "operator": "NRW",
-        "point": "6.861151,50.987423",
-        "display_type": "WEBCAM",
-        "lorryParkingFeatureIcons": [],
-        "future": false,
-        "imageurl": "https://www.verkehr.nrw/webcams/10108109881648294854.jpg",
-        "subtitle": "Blickrichtung Dortmund",
-        "linkurl": "https://www.blitzvideoserver.de/player_strassennrw.html?serverip=62.113.210.7&serverapp=strassennrw-rtplive&streamname=10108109881648294854"
-      }
-
-      allOf:
-        - $ref: '#/components/schemas/RoadItem'
-        - type: object
-          properties:
-            operator:
-              type: string
-            imageurl:
-              type: string
-              format: uri
-            linkurl:
-              type: string
-              format: uri
-
-    ParkingLorries:
-      type: object
-      properties:
-        parking_lorry:
-          type: array
-          items:
-            $ref: '#/components/schemas/ParkingLorry'
-
-    ParkingLorry:
-      example: {
-        "extent": "10.979849815368652,54.362571716308594,10.979849815368652,54.362571716308594",
-        "identifier": "UEFSS0lOR19fbWRtLmxvcnJ5LnBhcmtpbmdfX0RFLVNILTAwMTEwOA==",
-        "routeRecommendation": [],
-        "coordinate": {
-          "lat": "54.362572",
-          "long": "10.979850"
-        },
-        "footer": [],
-        "icon": "314-50",
-        "isBlocked": "false",
-        "description": [
-            "PKW Stellplätze: 21 ",
-            "LKW Stellplätze: 20 "
-        ],
-        "title": "A 1 | Richtung Puttgarden",
-        "point": "10.979850,54.362572",
-        "display_type": "PARKING",
-        "lorryParkingFeatureIcons": [
-          {
-            "icon": "almofont almo-picnic_facility",
-            "description": "Picknickmöglichkeiten",
-            "style": ""
-          },
-          {
-            "icon": "almofont almo-restroom",
-            "description": "Toilette vorhanden",
-            "style": ""
-          }
-        ],
-        "future": false,
-        "subtitle": "(Ostseeblick S)"
-      }
-
-      allOf:
-        - $ref: '#/components/schemas/RoadItem'
-
-    Warnings:
-      type: object
-      properties:
-        warning:
-          type: array
-          items:
-            $ref: '#/components/schemas/Warning'
-
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
+        point:
+          $ref: "#/components/schemas/Point"
+          nullable: true
+        extent:
+          $ref: "#/components/schemas/Extend"
+    WarningID:
+      type: string
     Warning:
-      example: {
-        "extent": "8.61785,52.97344,8.69904,53.00507",
-        "identifier": "V0FSTklOR19fbWRtLnZpel9fTE1TLU5JL3JfTE1TLU5JLzIxMjI2MF9EICBOSSBMTVMtTkkgIC4w",
-        "routeRecommendation": [],
-        "coordinate": {
-          "lat": "53.005070",
-          "long": "8.699040"
-        },
-        "footer": [],
-        "icon": "101",
-        "isBlocked": "false",
-        "description": [
-            "Beginn: 25.05.2021 00:00",
-            "Ende: 30.11.2021 23:59",
-            "",
-            "A1 Bremen Richtung Osnabrück",
-            "zwischen Dreieck Stuhr und Groß Ippener",
-            "Fahrbahnverengung, geänderte Verkehrsführung, Staugefahr, bis voraussichtlich 30.11.2021",
-            "Erweiterung PWC Kiekut."
-        ],
-        "title": "A1 | AS Delmenhorst-Ost (58b) - AS Groß Ippener (59)",
-        "point": "8.699040,53.005070",
-        "display_type": "WARNING",
-        "lorryParkingFeatureIcons": [],
-        "future": false,
-        "subtitle": "Bremen Richtung Osnabrück",
-        "startTimestamp": "2021-05-25T00:00:00.000+0200"
-      }
-
       allOf:
-        - $ref: '#/components/schemas/RoadEvent'
-
-    Closures:
-      type: object
+        - $ref: "#/components/schemas/RoadItem"
       properties:
-        closure:
-          type: array
-          items:
-            $ref: '#/components/schemas/Closure'
-
+        identifier:
+          $ref: "#/components/schemas/WarningID"
+        startLcPosition:
+          $ref: "#/components/schemas/IntegerString"
+        startTimestamp:
+          $ref: "#/components/schemas/TimeStamp"
+        geometry:
+          allOf:
+            - $ref: "#/components/schemas/GeoJSONLineString"
+          nullable: true
+        delayTimeValue:
+          allOf:
+            - $ref: "#/components/schemas/IntegerString"
+          nullable: true
+        abnormalTrafficType:
+          allOf:
+            - $ref: "#/components/schemas/TrafficType"
+          nullable: true
+        averageSpeed:
+          allOf:
+            - $ref: "#/components/schemas/FloatString"
+          nullable: true
+    ClosureID:
+      type: string
     Closure:
-      example: {
-        "extent": "6.95325,51.02996,6.96491,51.03644",
-        "identifier": "Q0xPU1VSRV9fbWRtLnZpel9fTE1TLU5XL3JfTE1TLU5XLzMxNTEyMV9EICBOVyBMTVMtTlcuMA==",
-        "routeRecommendation": [],
-        "coordinate": {
-          "lat": "51.036440",
-          "long": "6.964910"
-        },
-        "footer": [],
-        "icon": "262-2",
-        "isBlocked": "false",
-        "description": [
-            "Beginn: 20.06.2021 14:19",
-            "Ende: 31.12.2025 23:59",
-            "",
-            "A1 Dortmund - Köln",
-            "Leverkusener Brücke",
-            "in beiden Richtungen gesperrt für LKW über 3,5 t, bis 31.12.2025"
-        ],
-        "title": "A1 | AK Leverkusen-West (99) - AS Köln-Niehl (100)",
-        "point": "6.964910,51.036440",
-        "display_type": "WEIGHT_LIMIT_35",
-        "lorryParkingFeatureIcons": [],
-        "future": false,
-        "subtitle": "Dortmund Richtung Köln",
-        "startTimestamp": "2021-06-20T14:19:26.000+0200"
-      }
-
       allOf:
-        - $ref: '#/components/schemas/RoadEvent'
-
-    ElectricChargingStations:
+        - $ref: "#/components/schemas/RoadItem"
+      properties:
+        identifier:
+          $ref: "#/components/schemas/ClosureID"
+        startLcPosition:
+          $ref: "#/components/schemas/IntegerString"
+        startTimestamp:
+          allOf:
+            - $ref: "#/components/schemas/TimeStamp"
+          nullable: true
+        impact:
+          $ref: "#/components/schemas/Impact"
+        geometry:
+          allOf:
+            - $ref: "#/components/schemas/GeoJSONLineString"
+          nullable: true
+    RoadworkID:
+      type: string
+    Roadwork:
+      allOf:
+        - $ref: "#/components/schemas/RoadItem"
+      properties:
+        identifier:
+          $ref: "#/components/schemas/RoadworkID"
+        startLcPosition:
+          $ref: "#/components/schemas/IntegerString"
+        startTimestamp:
+          allOf:
+            - $ref: "#/components/schemas/TimeStamp"
+          nullable: true
+        impact:
+          $ref: "#/components/schemas/Impact"
+        geometry:
+          allOf:
+            - $ref: "#/components/schemas/GeoJSONLineString"
+          nullable: true
+    WebcamID:
+      type: string
+    Webcam:
+      type: object
+      description: Noch nicht dokumentiert
+    ParkingLorryID:
+      type: string
+      example: DE-SL-000008
+    ParkingLorry:
+      allOf:
+        - $ref: "#/components/schemas/RoadItem"
+      properties:
+        identifier:
+          $ref: "#/components/schemas/ParkingLorryID"
+        startLcPosition:
+          allOf:
+            - $ref: "#/components/schemas/IntegerString"
+          nullable: true
+    ElectricChargingStationID:
+      type: string
+      example: RUxFQ1RSSUNfQ0hBUkdJTkdfU1RBVElPTl9fMTA0Njg=
+    ElectricChargingStation:
+      allOf:
+        - $ref: "#/components/schemas/RoadItem"
+      properties:
+        identifier:
+          $ref: "#/components/schemas/ElectricChargingStationID"
+    # Utilities
+    Service:
+      type: string
+      enum:
+        - warning
+        - closure
+        - roadworks
+        - webcam
+        - parking_lorry
+        - electric_charging_station
+    Category:
+      type: string
+      enum:
+        - LOS
+        - WARNING
+        - CLOSURE
+        - REROUTING
+        - ROADWORKS
+        - WEBCAM
+        - PARKING
+        - PARKING_LORRY
+        - STATION
+        - FEATURE
+        - ELECTRIC_CHARGING_STATION
+        - FUEL_STATION
+    TrafficType:
+      type: string
+      enum:
+        - QUEUING_TRAFFIC
+        - SLOW_TRAFFIC
+        - STATIONARY_TRAFFIC
+    Icon:
+      type: string
+      enum:
+        - "101"
+        - "123"
+        - "250"
+        - "262-2"
+        - "314-50"
+        - "314-50-2"
+        - "448"
+        - charging_plug
+        - charging_plug_strong
+        - warnkegel
+    DisplayType:
+      type: string
+      enum:
+        - WEBCAM
+        - WARNING
+        - CLOSURE
+        - ROADWORKS
+        - SHORT_TERM_ROADWORKS
+        - PARKING
+        - ELECTRIC_CHARGING_STATION
+        - STRONG_ELECTRIC_CHARGING_STATION
+        - WEIGHT_LIMIT_35
+        - CLOSURE_ENTRY_EXIT
+    Symbol:
+      type: string
+      enum:
+        - BORDER_LEFT
+        - BORDER_RIGHT
+        - BREAKDOWN_LANE
+        - CLOSED
+        - SEPARATE
+    Extend:
+      type: string
+      example: 47.60,7.60,47.60,7.60
+    Point:
+      type: string
+      example: 47.60,7.60
+    TimeStamp:
+      type: string
+      example: "2024-10-09T07:09:40+02:00"
+    Coordinate:
       type: object
       properties:
-        electric_charging_station:
+        lat:
+          type: number
+        long:
+          type: number
+    GeoJSONLineString:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [LineString]
+        coordinates:
           type: array
           items:
-            $ref: '#/components/schemas/ElectricChargingStation'
-
-    ElectricChargingStation:
-      example: {
-        "extent": "9.176298,53.090847,9.176298,53.090847",
-        "identifier": "RUxFQ1RSSUNfQ0hBUkdJTkdfU1RBVElPTl9fMTI2OTk=",
-        "routeRecommendation": [],
-        "coordinate": {
-          "lat": "53.090847",
-          "long": "9.176298"
-        },
-        "footer": [],
-        "icon": "charging_plug_strong",
-        "isBlocked": "false",
-        "description": [
-            "A1 | Bremen | Raststätte Grundbergsee Nord",
-            "27376 Sottrum",
-            "",
-            "Ladepunkt 1:",
-            "AC Kupplung Typ 2",
-            "43 kW",
-            "",
-            "Ladepunkt 2:",
-            "DC Kupplung Combo, DC CHAdeMO",
-            "50 kW"
-        ],
-        "title": "A1 | Bremen | Raststätte Grundbergsee Nord",
-        "point": "9.176298,53.090847",
-        "display_type": "STRONG_ELECTRIC_CHARGING_STATION",
-        "lorryParkingFeatureIcons": [],
-        "future": false,
-        "subtitle": "Schnellladeeinrichtung"
-      }
-
-      allOf:
-        - $ref: '#/components/schemas/RoadItem'
-externalDocs:
-  description: "Weiterführende Dokumentation"
-  url: "https://github.com/bundesAPI/autobahn-api/blob/main/README.md"
+            type: array
+            minItems: 2
+            maxItems: 2
+            items:
+              type: number
+    GeoJSONFeatureCollection:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [FeatureCollection]
+        features:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeoJSONFeature"
+    GeoJSONFeature:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["Feature"]
+        geometry:
+          $ref: "#/components/schemas/GeoJSONPoint"
+    GeoJSONPoint:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["Point"]
+        coordinates:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            type: number
+        properties:
+          type: object
+          properties:
+            type:
+              type: string
+            country:
+              type: string
+            countrycode:
+              type: string
+            state:
+              type: string
+            city:
+              type: string
+              nullable: true
+            postcode:
+              type: string
+              nullable: true
+            district:
+              type: string
+              nullable: true
+            street:
+              type: string
+              nullable: true
+            housnumber:
+              type: string
+              nullable: true
+    Impact:
+      type: object
+      properties:
+        lower:
+          type: string
+          example: Aachen
+          nullable: true
+        upper:
+          type: string
+          example: Bochum
+          nullable: true
+        symbols:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/Symbol"
+            nullable: true
+    LorryParkingFeatureIcon:
+      type: object
+      properties:
+        icon:
+          type: string
+          example: almofont almo-picnic_facility
+        description:
+          type: string
+          example: Picknickmöglichkeiten
+        style:
+          type: string
+    MultiLineText:
+      type: array
+      items:
+        type: string
+    BooleanString:
+      type: string
+      enum:
+        - "false"
+        - "true"
+    IntegerString:
+      type: string
+      example: "1"
+    FloatString:
+      type: string
+      example: "1.7"
+    ImageFilename:
+      type: string
+      enum:
+        - 314-50.png
+        - 314-50.svg
+        - 361-50.png
+        - 361-50.svg
+        - 376.png
+        - 376.svg
+        - 377.png
+        - 377.svg
+        - AOS-Schriftzug1.png
+        - Hauptpunkt.png
+        - Hauptpunkt.svg
+        - Hauptpunkt_on.svg
+        - Kamera karte.png
+        - Kamera karte.svg
+        - Kamera_cluster.svg
+        - LKW.svg
+        - Lkw_P_b.png
+        - PWC.png
+        - RM.png
+        - Stau_karte.png
+        - Stau_karte.svg
+        - Stau_off.svg
+        - Stau_on.svg
+        - TK.png
+        - TR.png
+        - TRM.png
+        - Thumbs.db
+        - VZ.svg
+        - VZ_on.svg
+        - Vz_Karte.png
+        - Vz_Karte.svg
+        - aag_winkel.svg
+        - alternativroute.svg
+        - anzahl.svg
+        - baustelle_cluster.svg
+        - baustelle_navi.svg
+        - baustelle_navi_on.svg
+        - close.svg
+        - dWista-off.svg
+        - dWista-on.svg
+        - dauerbaustellen_Karte.png
+        - dauerbaustellen_Karte.svg
+        - deWista Karte.png
+        - deWista Karte.svg
+        - deWista Karte_MitKreis.png
+        - deWista Karte_mitKreis.svg
+        - deWista_cluster.svg
+        - dreieck_baustelle.png
+        - dreieck_stau.png
+        - hauptroute.svg
+        - impact/ARROW_DOWN.png
+        - impact/ARROW_UP.png
+        - impact/BORDER_LEFT.png
+        - impact/BORDER_RIGHT.png
+        - impact/BREAKDOWN_LANE.png
+        - impact/CLOSED.png
+        - impact/SEPARATE.png
+        - korridore_off.svg
+        - korridore_on.svg
+        - logo_autobahn_white.svg
+        - los_off.svg
+        - los_on.svg
+        - s.png
+        - slide_in.svg
+        - slide_in_right.svg
+        - slide_out.svg
+        - slide_out_right.svg
+        - son.png
+        - stau_cluster.png
+        - stau_cluster.svg
+        - stvo-101-gefahrstelle.png
+        - stvo-123-arbeitsstelle.png
+        - stvo-123-arbeitsstelle_geplant.png
+        - stvo-124-stau.png
+        - stvo-250-verbot.png
+        - stvo-250-verbot_geplant.png
+        - tagesbaustelle karte.svg
+        - tagesbaustelle kluster.svg
+        - tagesbaustelle_geortet_off.svg
+        - v.png
+        - verkehrslage_off.svg
+        - verkehrslage_on.svg
+        - vollsperrung karte.png
+        - vollsperrung karte.svg
+        - vollsperrung kluster.svg
+        - vollsperrung_off.svg
+        - vollsperrung_on.svg
+        - warnkegel.png
+        - warnkegel.svg
+        - warnkegel_geplant.png
+        - webcam_off.svg
+        - webcam_on.svg
