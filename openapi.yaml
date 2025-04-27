@@ -803,6 +803,7 @@ components:
         - STRONG_ELECTRIC_CHARGING_STATION
         - WEIGHT_LIMIT_35
         - CLOSURE_ENTRY_EXIT
+        - CLOSURE_TRUCKS
     Symbol:
       type: string
       enum:
