@@ -812,6 +812,11 @@ components:
         - BREAKDOWN_LANE
         - CLOSED
         - SEPARATE
+        - SEPARATE_TMP
+        - ARROW_DOWN
+        - ARROW_DOWN_BLUE
+        - ARROW_UP
+        - ARROW_UP_BLUE
     Extend:
       type: string
       example: 47.60,7.60,47.60,7.60
