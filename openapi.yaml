@@ -647,7 +647,8 @@ components:
         coordinate:
           $ref: "#/components/schemas/Coordinate"
         point:
-          $ref: "#/components/schemas/Point"
+          allOf:
+            - $ref: "#/components/schemas/Point"
           nullable: true
         extent:
           $ref: "#/components/schemas/Extend"
